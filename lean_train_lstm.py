@@ -5,7 +5,6 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset, TensorDataset
-from csvdataset import CSVDataset
 import statistics as stats
 
 import pickle
@@ -57,6 +56,8 @@ lean_vocab.freqs['<eos>'] = len(input_data)
 
 print(f'Loaded {len(lean_vocab.stoi)} vocab entries.' )
 
+# prepare input_data with <eos> for GT
+input_data = torch.cat( [input_data , torch.full( ( input_data.size(0) , 1 ) , lean_vocab.stoi['<eos>'] , dtype=torch.long ) ] , 1 )
 
 class LeanModel(nn.Module):
     def __init__(self, _vocab, _net_params, _trainer_params):
@@ -128,28 +129,23 @@ class Trainer():
         epoch_loss = 0.0
         epoch_accuracy = 0.0
 
-        # prepare ground truth
-        gt_t = torch.full( [ self.trainer_params['batch_size'] , self.trainer_params['line_size'] ] , lean_vocab.stoi['<eos>'] , dtype=torch.long )
-        gt_t = gt_t.to(device)
-
         p_bar = tqdm( self.train_dl , desc=f'Train ep {epoch_no}' , mininterval=1 , leave=True , dynamic_ncols=True )
         for batch_no, train_data in enumerate(p_bar):
             # prepare ground truth
             train_data = train_data[0].to(device)
-            gt_t[:train_data.size(0),:-1]=train_data[:,1:]
 
-            hs , _ = self.network( train_data )
+            hs , _ = self.network( train_data[:,:-1] )
             out = self.network.get_logits( hs )
 
             self.optimizer.zero_grad()
-            batch_loss = self.network.get_loss( out.permute(0,2,1) , gt_t[:train_data.size(0)] )
+            batch_loss = self.network.get_loss( out.permute(0,2,1) , train_data[:,1:] )
             batch_loss.backward()
             self.optimizer.step()
 
             epoch_loss += batch_loss.detach().item()
 
             if batch_no % 100 == 0:
-                batch_probs = self.network.get_probs( out.detach() / 1.0 ).gather( 2 , gt_t.unsqueeze(2) ).squeeze(2)
+                batch_probs = self.network.get_probs( out.detach() / 1.0 ).gather( 2 , train_data[:,1:].unsqueeze(2) ).squeeze(2)
                 batch_accuracy = batch_probs.prod( dim=1 ).mean()
                 epoch_accuracy += batch_accuracy
 
