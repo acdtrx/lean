@@ -37,7 +37,7 @@ train_filename = './cache/tensors_1M.pickle'
 with open( train_filename , 'rb' ) as h:
     input_data = pickle.load( h )
 
-input_data = torch.as_tensor( input_data , dtype=torch.long )
+input_data = torch.as_tensor( input_data[:round(input_data.size(0) * 0.2)] , dtype=torch.long )
 
 train_ds = TensorDataset( input_data )
 test_ds = TensorDataset( input_data[:1] )
@@ -51,7 +51,7 @@ vocab_filename = './cache/vocab_users.pickle'
 with open( vocab_filename , 'rb' ) as h:
     lean_vocab = pickle.load( h )
 
-lean_vocab.freqs['<unk>'] = 4000
+lean_vocab.freqs['<unk>'] = 100000
 lean_vocab.freqs['<eos>'] = len(input_data)
 
 print(f'Loaded {len(lean_vocab.stoi)} vocab entries.' )
@@ -85,8 +85,8 @@ class LeanModel(nn.Module):
 
         self.loss = nn.CrossEntropyLoss( weight=self.vocab_weights )
         self.sm = nn.Softmax( dim=2 )
-        self.h0 = nn.Parameter( torch.randn( ( self.dirs , self.trainer_params['batch_size'] , self.net_params['hidden_size'] ) ) )
-        self.c0 = nn.Parameter( torch.randn( ( self.dirs , self.trainer_params['batch_size'] , self.net_params['hidden_size'] ) ) )
+        # self.h0 = nn.Parameter( torch.randn( ( self.dirs , self.trainer_params['batch_size'] , self.net_params['hidden_size'] ) ) )
+        # self.c0 = nn.Parameter( torch.randn( ( self.dirs , self.trainer_params['batch_size'] , self.net_params['hidden_size'] ) ) )
 
     def make_weights( self ):
         self.vocab_weights = torch.zeros( self.vocab_len , dtype=torch.float )
@@ -97,7 +97,8 @@ class LeanModel(nn.Module):
 
     def forward(self, x ):
         y = self.embed( x )
-        return self.rnn( y , ( self.h0, self.c0 ) )
+        # return self.rnn( y , ( self.h0, self.c0 ) )
+        return self.rnn( y )
 
     def get_logits(self, hs):
         return self.logits( hs )
@@ -128,8 +129,9 @@ class Trainer():
     def train_epoch(self, epoch_no):
         epoch_loss = 0.0
         epoch_accuracy = 0.0
+        display_acc_every = 100
 
-        p_bar = tqdm( self.train_dl , desc=f'Train ep {epoch_no}' , mininterval=1 , leave=True , dynamic_ncols=True )
+        p_bar = tqdm( self.train_dl , desc=f'Trn {epoch_no}' , mininterval=1 , leave=True , dynamic_ncols=True )
         for batch_no, train_data in enumerate(p_bar):
             # prepare ground truth
             train_data = train_data[0].to(device)
@@ -145,20 +147,20 @@ class Trainer():
             epoch_loss += batch_loss.detach().item()
 
             if batch_no % 100 == 0:
-                batch_probs = self.network.get_probs( out.detach() / 1.0 ).gather( 2 , train_data[:,1:].unsqueeze(2) ).squeeze(2)
+                batch_probs = self.network.get_probs( out.detach() / 0.8 ).gather( 2 , train_data[:,1:].unsqueeze(2) ).squeeze(2)
                 batch_accuracy = batch_probs.prod( dim=1 ).mean()
                 epoch_accuracy += batch_accuracy
 
                 p_bar.set_postfix(
                     refresh=False,
                     ep_loss=f'{epoch_loss/(batch_no+1):.4f}',
-                    btc_acc = f'{batch_accuracy:.4f}',
-                    ep_acc=f'{epoch_accuracy/(batch_no+1):.2f}'
+                    btc_acc = f'{batch_accuracy*100:.2f}%',
+                    ep_acc=f'{epoch_accuracy*100/(1 + batch_no / display_acc_every ):.2f}%'
                 )
         
         self.scheduler.step( epoch_loss )
 
-        return epoch_loss / ( batch_no + 1 ) , epoch_accuracy/( batch_no + 1 )
+        return epoch_loss / ( batch_no + 1 ) , epoch_accuracy*100/( 1+ batch_no / display_acc_every )
 
 
 network = LeanModel( lean_vocab , net_params , trainer_params )
@@ -174,4 +176,4 @@ for i in range( trainer_params['epochs'] ):
 network.save()
 
 for epoch, (loss, acc) in enumerate( losses ):
-    print( f'Epoch {epoch} loss: {loss:.4f} accuracy: {acc:.4f}' )
+    print( f'Epoch {epoch} loss: {loss:.4f} accuracy: {acc:.2f}%' )
