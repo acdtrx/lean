@@ -4,3 +4,4 @@ output/
 cache/
 data/
 __pycache__/
+runs/
