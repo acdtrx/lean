@@ -14,25 +14,13 @@ from tqdm import tqdm
 
 from lean_network import LeanModel
 
+from lean_params import net_params, trainer_params
+
 # setup device (CPU/GPU)
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
 else:
     device = torch.device('cpu')
-
-net_params = {
-    "embed_size": 128,
-    "hidden_size": 512,
-    "bidirectional": True,
-    "weights_alpha": 1000
-}
-
-trainer_params = {
-    "batch_size": 64,
-    "line_size": 10,
-    "lr": 0.001,
-    "epochs": 8
-}
 
 # train_filename = './cache/tensors_train.pt'
 train_filename = './cache/tensors_1M.pt'
