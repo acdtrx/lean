@@ -12,7 +12,7 @@ import lean_utils as lu
 
 from tqdm import tqdm
 
-from network import LeanModel
+from lean_network import LeanModel
 
 # setup device (CPU/GPU)
 if torch.cuda.is_available():
