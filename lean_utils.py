@@ -48,8 +48,25 @@ def load_vocab( eos_freq ):
 
     return lean_vocab
 
+def load_and_prepare_data( filename , padding , cut=1.0 ):
+    input_data = torch.load( filename )
+    if cut != 1.0:
+        input_data = input_data[:round(input_data.size(0) * cut)]
+    return torch.cat( [input_data , torch.full( ( input_data.size(0) , 1 ) , padding , dtype=torch.long ) ] , 1 )
+
+def load_data( padding, train_filename, test_filename=None, train_split=0.8 , cut=1.0 ):
+    train_data = load_and_prepare_data( train_filename , padding , cut )
+
+    if test_filename != None:
+        test_data = load_and_prepare_data( test_filename , padding , cut )
+    else:
+        data_split = round( train_data.size(0) * train_split )
+        train_data, test_data = train_data[:data_split] , train_data[data_split:]
+
+    return train_data, test_data
+
 def save_network(network, training_label, epoch_no):
-    torch.save( network.state_dict() , './output/model_{trainng_label}_ep_{epoch_no}.pt' )
+    torch.save( network.state_dict() , f'./output/model_{training_label}_ep_{epoch_no}.pt' )
 
 def load(network, training_label, epoch_no):
-    network.load_state_dict( torch.load( './output/model_{trainng_label}_ep_{epoch_no}.pt' ) )
+    network.load_state_dict( torch.load( f'./output/model_{training_label}_ep_{epoch_no}.pt' ) )

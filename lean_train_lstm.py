@@ -10,7 +10,6 @@ import statistics as stats
 from torch.utils.tensorboard import SummaryWriter
 import lean_utils as lu
 
-import pickle
 from tqdm import tqdm
 
 from network import LeanModel
@@ -35,23 +34,15 @@ trainer_params = {
     "epochs": 8
 }
 
-# train_filename = './cache/tensors_train.pickle'
-train_filename = './cache/tensors_1M.pickle'
+# train_filename = './cache/tensors_train.pt'
+train_filename = './cache/tensors_1M.pt'
 # input_total_lines = 418236956 # total
 
-with open( train_filename , 'rb' ) as h:
-    input_data = pickle.load( h )
-
-input_data = torch.as_tensor( input_data[:round(input_data.size(0) * 0.2)] , dtype=torch.long )
-
 # load vocabulary
-lean_vocab = lu.load_vocab( input_data.size(0) )
+lean_vocab = lu.load_vocab( 10000000 )
 
-# prepare input_data with <eos> for GT
-input_data = torch.cat( [input_data , torch.full( ( input_data.size(0) , 1 ) , lean_vocab.stoi['<eos>'] , dtype=torch.long ) ] , 1 )
-
-data_spl = round( input_data.size(0) * 0.8 )
-train_data, test_data = input_data[:data_spl] , input_data[data_spl:]
+# load training and test
+train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename , cut=0.2 )
 
 #setup tensorboard & friends
 training_label = lu.create_training_label()
@@ -67,7 +58,7 @@ class Trainer():
         train_ds = TensorDataset( train_data )
         test_ds = TensorDataset( test_data )
 
-        self.train_dl = DataLoader( train_ds , trainer_params['batch_size'] , True )
+        self.train_dl = DataLoader( train_ds , trainer_params['batch_size'] , False )
         self.test_dl = DataLoader( test_ds , trainer_params['batch_size'] , False )
 
         self.optimizer = optim.Adam( self.network.parameters() , lr=self.trainer_params['lr'] )
