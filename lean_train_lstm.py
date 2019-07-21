@@ -35,18 +35,14 @@ trainer_params = {
     "epochs": 8
 }
 
-train_filename = './cache/tensors_train.pickle'
-# train_filename = './cache/tensors_1M.pickle'
+# train_filename = './cache/tensors_train.pickle'
+train_filename = './cache/tensors_1M.pickle'
 # input_total_lines = 418236956 # total
-
 
 with open( train_filename , 'rb' ) as h:
     input_data = pickle.load( h )
 
 input_data = torch.as_tensor( input_data[:round(input_data.size(0) * 0.2)] , dtype=torch.long )
-
-data_spl = round( input_data.size(0) * 0.8 )
-train_data, test_data = input_data[:data_spl] , input_data[data_spl:]
 
 # load vocabulary
 lean_vocab = lu.load_vocab( input_data.size(0) )
@@ -54,8 +50,13 @@ lean_vocab = lu.load_vocab( input_data.size(0) )
 # prepare input_data with <eos> for GT
 input_data = torch.cat( [input_data , torch.full( ( input_data.size(0) , 1 ) , lean_vocab.stoi['<eos>'] , dtype=torch.long ) ] , 1 )
 
-#setup tensorboard
-tb_writer_train, tb_writer_test = lu.setup_tensorboard(net_params, trainer_params, lean_vocab)
+data_spl = round( input_data.size(0) * 0.8 )
+train_data, test_data = input_data[:data_spl] , input_data[data_spl:]
+
+#setup tensorboard & friends
+training_label = lu.create_training_label()
+tb_writer_train, tb_writer_test = lu.setup_tensorboard( training_label )
+lu.output_hparams( training_label, net_params, trainer_params, lean_vocab )
 
 # trainer class
 class Trainer():
@@ -156,6 +157,4 @@ for epoch_no in range( trainer_params['epochs'] ):
     tb_writer_test.add_scalar( 'Loss' , epoch_data[0] , epoch_no )
     tb_writer_test.add_scalar( 'Accuracy' , epoch_data[1] , epoch_no )
 
-    network.save( epoch_no )
-
-network.save( 'final' )
+    lu.save_network( network, training_label , epoch_no )

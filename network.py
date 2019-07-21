@@ -4,7 +4,6 @@ import torch.nn as nn
 class LeanModel(nn.Module):
     def __init__(self, _vocab, _net_params):
         super().__init__()
-        self.model_filename='./output/model_ep_{epoch}.pt'
         self.vocab = _vocab
         self.vocab_len = len(_vocab.stoi)
         self.net_params = _net_params
@@ -46,8 +45,3 @@ class LeanModel(nn.Module):
     def get_probs( self , y ):
         return self.sm( y )
 
-    def save(self, epoch_no):
-        torch.save( self.state_dict() , self.model_filename.format( epoch=epoch_no ) )
-
-    def load(self):
-        self.load_state_dict( torch.load( self.model_filename ) )
