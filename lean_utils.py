@@ -68,5 +68,5 @@ def load_data( padding, train_filename, test_filename=None, train_split=0.8 , cu
 def save_network(network, training_label, epoch_no):
     torch.save( network.state_dict() , f'./output/model_{training_label}_ep_{epoch_no}.pt' )
 
-def load(network, training_label, epoch_no):
-    network.load_state_dict( torch.load( f'./output/model_{training_label}_ep_{epoch_no}.pt' ) )
+def load_network(network, training_label, epoch_no):
+    return network.load_state_dict( torch.load( f'./output/model_{training_label}_ep_{epoch_no}.pt' ) )
