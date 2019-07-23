@@ -27,13 +27,14 @@ train_filename = './cache/tensors_1M.pt'
 # input_total_lines = 418236956 # total
 
 # load vocabulary
-lean_vocab = lu.load_vocab( 10000000 )
+lean_vocab = lu.load_vocab( 1000000 )
 
 # load training and test
-train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename , cut=0.2 )
+train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename )
 
 #setup tensorboard & friends
 training_label = lu.create_training_label()
+print( f'Training label: {training_label}' )
 tb_writer_train, tb_writer_test = lu.setup_tensorboard( training_label )
 lu.output_hparams( training_label, net_params, trainer_params, lean_vocab )
 
@@ -59,9 +60,9 @@ class Trainer():
         display_acc_every = 100
 
         p_bar = tqdm( self.train_dl , desc=f'Trn {epoch_no}' , mininterval=1 , leave=True , dynamic_ncols=True )
-        for batch_no, train_data in enumerate(p_bar):
+        for batch_no, (train_data,) in enumerate(p_bar):
             # prepare ground truth
-            train_data = train_data[0].to(device)
+            train_data = train_data.to(device)
 
             hs , _ = self.network( train_data[:,:-1] )
             out = self.network.get_logits( hs )
@@ -73,7 +74,7 @@ class Trainer():
 
             epoch_loss += batch_loss.detach().item()
 
-            if batch_no % 100 == 0:
+            if batch_no % display_acc_every == 0:
                 batch_probs = self.network.get_probs( out.detach() / 0.8 ).gather( 2 , train_data[:,1:].unsqueeze(2) ).squeeze(2)
                 batch_accuracy = batch_probs.prod( dim=1 ).mean()
                 epoch_accuracy += batch_accuracy
@@ -98,9 +99,9 @@ class Trainer():
 
         with torch.no_grad():
             p_bar = tqdm( self.test_dl , desc=f'Tst {epoch_no}' , mininterval=1 , leave=True , dynamic_ncols=True )
-            for batch_no, test_data in enumerate(p_bar):
+            for batch_no, (test_data,) in enumerate(p_bar):
                 # prepare ground truth
-                test_data = test_data[0].to(device)
+                test_data = test_data.to(device)
 
                 hs , _ = self.network( test_data[:,:-1] )
                 out = self.network.get_logits( hs )
@@ -108,7 +109,7 @@ class Trainer():
                 batch_loss = self.network.get_loss( out.permute(0,2,1) , test_data[:,1:] )
                 epoch_loss += batch_loss.detach().item()
 
-                if batch_no % 100 == 0:
+                if batch_no % display_acc_every == 0:
                     batch_probs = self.network.get_probs( out.detach() / 0.8 ).gather( 2 , test_data[:,1:].unsqueeze(2) ).squeeze(2)
                     batch_accuracy = batch_probs.prod( dim=1 ).mean()
                     epoch_accuracy += batch_accuracy

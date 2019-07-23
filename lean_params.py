@@ -9,7 +9,6 @@ net_params = {
 
 trainer_params = {
     "batch_size": 64,
-    "line_size": 10,
     "lr": 0.001,
-    "epochs": 8
+    "epochs": 4
 }
