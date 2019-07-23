@@ -21,7 +21,8 @@ def output_hparams( _training_label, _net_params, _trainer_params, _gen_params, 
         ['Vocabulary <unk> weight', _vocab.freqs['<unk>']],
         ['Vocabulary <eos> weight', _vocab.freqs['<eos>']],
         ['Batch size', _trainer_params['batch_size']],
-        ['Learning rate', _trainer_params['lr']]
+        ['Learning rate', _trainer_params['lr']],
+        ['Computer accuracy every', _trainer_params['compute_acc_every']]
     ]
 
     with open( f'./output/{_training_label}.txt' , 'w' ) as h:
