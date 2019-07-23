@@ -22,10 +22,14 @@ class Trainer():
         self.optimizer = optim.Adam( self.network.parameters() , lr=self.trainer_params['lr'] )
         self.scheduler = lr_scheduler.ReduceLROnPlateau( self.optimizer , mode='min' , factor=0.1 , threshold=0.1 , patience=1 , verbose=True )
 
-    def train_epoch(self, epoch_no):
+    def train_epoch(self, epoch_no, tests = None):
         epoch_loss = 0.0
         epoch_accuracy = 0.0
         epoch_accuracy_p = 0
+
+        test_losses = []
+        if tests:
+            test_every = len( self.train_dl ) // tests
 
         p_bar = tqdm( self.train_dl , desc=f'Trn {epoch_no}' , mininterval=1 , leave=True , dynamic_ncols=True )
         for batch_no, (train_data,) in enumerate(p_bar):
@@ -54,10 +58,14 @@ class Trainer():
                     btc_acc = f'{batch_accuracy*100:.2f}%',
                     ep_acc=f'{epoch_accuracy_p:.2f}%'
                 )
+
+            if tests and batch_no % test_every == 0:
+                test_loss, _ = self.test_epoch( epoch_no )
+                test_losses.append( test_loss )
         
         self.scheduler.step( epoch_loss )
 
-        return epoch_loss / ( batch_no + 1 ) , epoch_accuracy_p
+        return epoch_loss / ( batch_no + 1 ) , epoch_accuracy_p, test_losses
 
     def test_epoch(self, epoch_no):
         epoch_loss = 0.0
