@@ -1,4 +1,9 @@
 
+gen_params = {
+    "ws_label": "1M",
+    "ws_size": 1000000,
+    # "ws_size": 418236956
+}
 
 net_params = {
     "embed_size": 128,

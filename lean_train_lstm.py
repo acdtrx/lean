@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from lean_network import LeanModel
 
-from lean_params import net_params, trainer_params
+from lean_params import net_params, trainer_params, gen_params
 
 # setup device (CPU/GPU)
 if torch.cuda.is_available():
@@ -22,21 +22,20 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
-# train_filename = './cache/tensors_train.pt'
-train_filename = './cache/tensors_1M.pt'
-# input_total_lines = 418236956 # total
+vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
+train_filename = f'./cache/tensors_train_{gen_params["ws_label"]}.pt'
 
 # load vocabulary
-lean_vocab = lu.load_vocab( 1000000 )
+lean_vocab = lu.load_vocab( vocab_filename )
 
 # load training and test
-train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename )
+train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename , cut=0.5 )
 
 #setup tensorboard & friends
 training_label = lu.create_training_label()
 print( f'Training label: {training_label}' )
 tb_writer_train, tb_writer_test = lu.setup_tensorboard( training_label )
-lu.output_hparams( training_label, net_params, trainer_params, lean_vocab )
+lu.output_hparams( training_label, net_params, trainer_params, gen_params, lean_vocab )
 
 # trainer class
 class Trainer():

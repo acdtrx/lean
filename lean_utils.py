@@ -9,9 +9,11 @@ def create_training_label():
 
     return current_time
 
-def output_hparams( _training_label, _net_params, _trainer_params, _vocab ):
+def output_hparams( _training_label, _net_params, _trainer_params, _gen_params, _vocab ):
 
     output = [
+        ['Working Set label', _gen_params['ws_label']],
+        ['Working Set size', _gen_params['ws_size']],
         ['Embed size', _net_params['embed_size']],
         ['Hidden size', _net_params['hidden_size']],
         ['Bidirectional LSTM', _net_params['bidirectional']],
@@ -35,26 +37,21 @@ def setup_tensorboard( _training_label ):
 
     return tb_writer_train, tb_writer_test
 
-def load_vocab( eos_freq ):
-    vocab_filename = './cache/vocab_users.pickle'
-
-    with open( vocab_filename , 'rb' ) as h:
+def load_vocab( filename ):
+    with open( filename , 'rb' ) as h:
         lean_vocab = pickle.load( h )
-
-    lean_vocab.freqs['<unk>'] = 50000
-    lean_vocab.freqs['<eos>'] = eos_freq
 
     print(f'Loaded {len(lean_vocab.stoi)} vocab entries.' )
 
     return lean_vocab
 
-def load_and_prepare_data( filename , padding , cut=1.0 ):
-    input_data = torch.load( filename )
-    if cut != 1.0:
-        input_data = input_data[:round(input_data.size(0) * cut)]
-    return torch.cat( [input_data , torch.full( ( input_data.size(0) , 1 ) , padding , dtype=torch.long ) ] , 1 )
-
 def load_data( padding, train_filename, test_filename=None, train_split=0.8 , cut=1.0 ):
+    def load_and_prepare_data( filename , padding , cut=1.0 ):
+        input_data = torch.load( filename )
+        if cut != 1.0:
+            input_data = input_data[:round(input_data.size(0) * cut)]
+        return torch.cat( [input_data , torch.full( ( input_data.size(0) , 1 ) , padding , dtype=torch.long ) ] , 1 )
+
     train_data = load_and_prepare_data( train_filename , padding , cut )
 
     if test_filename != None:
