@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.optim as optim
-# import statistics as stats
 
 from tqdm import tqdm
 
@@ -47,7 +46,7 @@ class Trainer():
             epoch_loss += batch_loss.detach().item()
 
             if batch_no % self.trainer_params['compute_acc_every'] == 0:
-                batch_probs = self.network.get_probs( out.detach() / 0.8 ).gather( 2 , train_data[:,1:].unsqueeze(2) ).squeeze(2)
+                batch_probs = self.network.get_probs( out.detach() / 1.0 ).gather( 2 , train_data[:,1:].unsqueeze(2) ).squeeze(2)
                 batch_accuracy = batch_probs.prod( dim=1 ).mean()
                 epoch_accuracy += batch_accuracy
                 epoch_accuracy_p = epoch_accuracy*100/(1 + batch_no / self.trainer_params['compute_acc_every'] )
@@ -85,7 +84,7 @@ class Trainer():
                 epoch_loss += batch_loss.detach().item()
 
                 if batch_no % self.trainer_params['compute_acc_every'] == 0:
-                    batch_probs = self.network.get_probs( out.detach() / 0.8 ).gather( 2 , test_data[:,1:].unsqueeze(2) ).squeeze(2)
+                    batch_probs = self.network.get_probs( out.detach() / 1.0 ).gather( 2 , test_data[:,1:].unsqueeze(2) ).squeeze(2)
                     batch_accuracy = batch_probs.prod( dim=1 ).mean()
                     epoch_accuracy += batch_accuracy
                     epoch_accuracy_p = epoch_accuracy*100/(1 + batch_no / self.trainer_params['compute_acc_every'] )
