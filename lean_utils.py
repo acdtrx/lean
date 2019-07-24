@@ -3,6 +3,14 @@ import pickle
 from tabulate import tabulate
 import torch
 
+def get_device( force_cpu = False):
+    if not force_cpu and torch.cuda.is_available():
+        device = torch.device('cuda:0')
+    else:
+        device = torch.device('cpu')
+
+    return device
+
 def create_training_label():
     from datetime import datetime
     current_time = datetime.now().strftime('%b%d_%H-%M-%S')

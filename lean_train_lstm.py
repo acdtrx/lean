@@ -9,11 +9,9 @@ from lean_trainer import Trainer
 from lean_params import net_params, trainer_params, gen_params
 
 # setup device (CPU/GPU)
-if torch.cuda.is_available():
-    device = torch.device('cuda:0')
-else:
-    device = torch.device('cpu')
+device = lu.get_device()
 
+# input filenames
 vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
 train_filename = f'./cache/tensors_train_{gen_params["ws_label"]}.pt'
 
@@ -32,13 +30,21 @@ lu.output_hparams( training_label, net_params, trainer_params, gen_params, lean_
 # output vocabulary freqs
 def vocab_summary( _vocab , _sw ):
     x, y = zip( *_vocab.freqs.most_common( 50 ) )
-    plt.figure( figsize=(9,3) )
+    plt.figure( figsize=(16,4) )
     plt.bar( x , y )
+    plt.xticks( rotation=315 )
     _sw.add_figure( "Vocab most common" , plt.gcf() )
 
-    x, y = zip( *_vocab.freqs.most_common( )[-51:] )
-    plt.figure( figsize=(9,3) )
+    lf = _vocab.freqs.most_common()
+    lfa = []
+    for k,v in lf:
+        if v >= 10:
+            lfa.append( (k,v) )
+
+    x, y = zip( *lfa[-51:] )
+    plt.figure( figsize=(16,4) )
     plt.bar( x , y )
+    plt.xticks( rotation=315 )
     _sw.add_figure( "Vocab least common" , plt.gcf() )
 
 vocab_summary( lean_vocab , tb_train_writer )
@@ -64,7 +70,7 @@ def run_epoch( epoch_no , tests = None , save_network = False):
     if save_network:
         lu.save_network( network, training_label , epoch_no )
 
-run_epoch(0 , 20)
+run_epoch(0 , 10)
 
 for epoch_no in range(1, trainer_params['epochs'] ):
     run_epoch( epoch_no )
