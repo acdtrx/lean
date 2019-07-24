@@ -3,6 +3,7 @@ import pickle
 from tabulate import tabulate
 import torch
 import random
+from termcolor import colored as clr
 
 def get_device( force_cpu = False):
     if not force_cpu and torch.cuda.is_available():
@@ -97,14 +98,35 @@ def sample_log_line( _vocab , _input , _output , _probs , _device ):
     )
 
 def get_anomaly_lines( _vocab , _input , _output , _probs , _device ):
-    al = []
-    for line_no, line in enumerate(_input):
-        if _probs[line_no].min() < 0.7:
-            al.append(
-                (
-                    line,
-                    torch.cat( [ _input[line_no:line_no+1, 0] , _output[line_no].argmax(dim=1)] ),
-                    torch.cat( [ torch.as_tensor( [1.0] ).to(_device) , _probs[line_no] ] )
-                )
-            )
-    return al
+    def get_item( _i , _o , _p ):
+        if _i != _o:
+            el = f'{_vocab.itos[_i]}/{_vocab.itos[_o]}'
+        else:
+            el = _vocab.itos[_i]
+
+        if _p > 0.75:
+            p_color = None
+        elif _p > 0.5:
+            p_color = 'blue'
+        elif _p > 0.25:
+            p_color = 'yellow'
+        else:
+            p_color = 'red'
+
+        return clr( el , p_color )
+
+    b_anomalies = 0
+    for line_no, (i_line, o_line, p_line) in enumerate( zip( _input , _output , _probs ) ):
+        o_line = torch.cat( [ _input[line_no:line_no+1, 0] , o_line.argmax(dim=1)] )
+        p_line = torch.cat( [ torch.as_tensor( [1.0] ).to(_device) , p_line ] )
+        if ( i_line != o_line ).sum() != 0:
+            b_anomalies += 1
+            l_elems = []
+            l_elems.append( f'{get_item(i_line[0], o_line[0] , p_line[0])}@{get_item(i_line[1], o_line[1] , p_line[1])}' ) #src_user
+            l_elems.append( f'{get_item(i_line[2], o_line[2] , p_line[2])}@{get_item(i_line[3], o_line[3] , p_line[3])}' ) #dst_user
+            for i in range(4,11):
+                l_elems.append( get_item( i_line[i] , o_line[i] , p_line[i] ) )
+            l_elems.append( clr( f'{p_line.prod() * 100:.4f}%' , attrs=['bold'] ) )
+            print( ",".join( l_elems ) )
+
+    return b_anomalies

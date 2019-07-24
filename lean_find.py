@@ -2,8 +2,6 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 import torchtext.vocab as vocab
 
-from termcolor import colored as clr
-
 import lean_utils as lu
 from lean_network import LeanModel
 
@@ -30,10 +28,8 @@ def find_anomalies( data ):
     test_ds = TensorDataset( data )
     test_dl = DataLoader( test_ds , 64 , False )
     anomalies = 0
-    anomaly_lines = []
     with torch.no_grad():
-        p_bar = tqdm( test_dl , desc=f'Find' , mininterval=1 , leave=True , dynamic_ncols=True )
-        for batch_no, (batch_data,) in enumerate(p_bar):
+        for (batch_data,) in test_dl:
             # prepare ground truth
             batch_data = batch_data.to(device)
 
@@ -41,28 +37,11 @@ def find_anomalies( data ):
             out = network.get_logits( hs )
 
             batch_items_probs = network.get_probs( out.detach() ).gather( 2 , batch_data[:,1:].unsqueeze(2) ).squeeze(2)
-            batch_anomaly_lines = lu.get_anomaly_lines( lean_vocab , batch_data , out , batch_items_probs , device )
-            anomaly_lines += batch_anomaly_lines
+            anomalies += lu.get_anomaly_lines( lean_vocab , batch_data , out , batch_items_probs , device )
 
-            # batch_lines_probs = batch_items_probs.prod( dim=1 )
-
-            # anomalies += batch_lines_probs[ batch_lines_probs < 0.05 ].size(0)
-            # p_bar.set_postfix( anomalies=anomalies, refresh=False )
-    return anomaly_lines
+    return anomalies
 
 
 anomaly_lines = find_anomalies( test_data )
 
-for s_input, s_output, s_probs in anomaly_lines:
-    for token in s_input:
-        print( lean_vocab.itos[token] , end="," )
-    print()
-    for pos, token in enumerate( s_output ):
-        if s_probs[pos] > 0.7:
-            col = 'green'
-        elif s_probs[pos] > 0.3:
-            col = 'yellow'
-        else:
-            col = 'red'
-        print( clr( lean_vocab.itos[token] , col ) , end="," )
-    print( f'{s_probs.prod() * 100:.2f}' )
+print( f'Found {anomaly_lines} anomalies.' )
