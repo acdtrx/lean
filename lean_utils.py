@@ -79,24 +79,6 @@ def save_network(network, training_label, epoch_no):
 def load_network(network, training_label, epoch_no):
     return network.load_state_dict( torch.load( f'./output/model_{training_label}_ep_{epoch_no}.pt' ) )
 
-def save_epoch_samples( epoch_no , training_label , epoch_samples ):
-    with open( f'./output/samples_{training_label}_{epoch_no}.pickle' , 'wb' ) as h:
-        pickle.dump( epoch_samples , h )
-
-def load_epoch_samples( epoch_no , training_label ):
-    with open( f'./output/samples_{training_label}_{epoch_no}.pickle' , 'rb' ) as h:
-        epoch_samples = pickle.load( h )
-
-    return epoch_samples
-
-def sample_log_line( _vocab , _input , _output , _probs , _device ):
-    idx = random.randint( 0, len(_input) - 1 )
-    return (
-        _input[idx],
-        torch.cat( [ _input[idx:idx+1,0] , _output[idx].argmax(dim=1)] ),
-        torch.cat( [ torch.as_tensor( [1.0] ).to(_device) , _probs[idx] ] )
-    )
-
 def get_anomaly_lines( _vocab , _input , _output , _probs , _device ):
     def get_item( _i , _o , _p ):
         if _i != _o:
