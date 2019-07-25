@@ -5,21 +5,20 @@ import csv
 import pickle
 from tqdm import tqdm
 
-from lean_params import gen_params
+import lean_utils as lu
+import lean_params as lp
+
+gen_params = lp.gen_params_all['day8']
 
 input_filename = './data/auth_users.txt'
 vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
 
-train_tensors_filename = f'./cache/tensors_train_{gen_params["ws_label"]}.pt'
-test_tensors_filename = f'./cache/tensors_test_{gen_params["ws_label"]}.pt'
+tensors_filename = f'./cache/tensors_{gen_params["ws_label"]}.pt'
 
 line_size = 10
-create_train = True
-create_test = True
 
 # import vocabulary
-with open( vocab_filename , 'rb') as h:
-    v = pickle.load( h )
+v = lu.load_vocab( vocab_filename )
 
 def process_line( line ):
     ret = torch.zeros( line_size )
@@ -38,31 +37,21 @@ def process_line( line ):
             c+=1
     return ret
 
-with open( input_filename , 'r') as f:
-    if create_train:
-        t = torch.zeros( [gen_params['ws_size'] , line_size] , dtype=torch.long )
-        p_bar = tqdm( csv.reader( f ) , desc="Train processing" , total = gen_params['ws_size'] , mininterval=1.0)
-        for line_no, line in enumerate( p_bar ):
-            t[line_no,:] = process_line(line)
-            if line_no == gen_params['ws_size'] - 1:
-                break
+tbs = 10000
+tbi = 0
+t = torch.zeros( [ tbs , line_size] , dtype=torch.long )
+tensors_arr = []
+for line in lu.csv_parse_by_time( input_filename , gen_params['ws_start_time'] , gen_params['ws_end_time'] ):
+    if tbi == tbs:
+        tensors_arr.append( t )
+        tbi = 0
+        t = torch.zeros( [ tbs , line_size] , dtype=torch.long )
 
-        torch.save( t , train_tensors_filename )
-        print( f'Saved {train_tensors_filename}' )
+    t[tbi,:] = process_line(line)
+    tbi += 1
+tensors_arr.append( t[:tbi] )
 
-    else:
-        p_bar = tqdm( csv.reader( f ) , desc="Train skipping" , total = gen_params['ws_size'] , mininterval=1.0)
-        for line_no, line in enumerate( p_bar ):
-            if line_no == gen_params['ws_size'] - 1:
-                break
+out_t = torch.cat( tensors_arr , dim=0 )
 
-    if create_test:
-        t = torch.zeros( [gen_params['ws_size'] , line_size] , dtype=torch.long )
-        p_bar = tqdm( csv.reader( f ) , desc="Test processing" , total = gen_params['ws_size'] , mininterval=1.0)
-        for line_no, line in enumerate( p_bar ):
-            t[line_no,:] = process_line(line)
-            if line_no == gen_params['ws_size'] - 1:
-                break
-
-        torch.save( t , test_tensors_filename )
-        print( f'Saved {test_tensors_filename}' )
+torch.save( out_t , tensors_filename )
+print( f'Saved {tensors_filename}' )

@@ -3,7 +3,7 @@ import pickle
 import lean_params as lp
 import lean_utils as lu
 
-gen_params = lp.gen_params_day7
+gen_params = lp.gen_params_all['day7']
 
 v_counter = Counter()
 

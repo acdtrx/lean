@@ -123,6 +123,7 @@ def csv_parse_by_time( _filename, _start_time, _end_time ):
         last_time = "0"
         for line in csv_reader:
             if int(line[0]) >= _start_time:
+                p_bar.update( 1 )
                 break
             if last_time != line[0]:
                 last_time = line[0]
@@ -136,6 +137,7 @@ def csv_parse_by_time( _filename, _start_time, _end_time ):
         last_line = "0"
         for line_no , line in enumerate( csv_reader ):
             if int(line[0]) >= _end_time:
+                p_bar.update( 1 )
                 break
             if line[0] != last_line:
                 last_line = line[0]
