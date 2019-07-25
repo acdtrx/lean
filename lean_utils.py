@@ -4,6 +4,8 @@ from tabulate import tabulate
 import torch
 import random
 from termcolor import colored as clr
+import csv
+from tqdm import tqdm
 
 def get_device( force_cpu = False):
     if not force_cpu and torch.cuda.is_available():
@@ -112,3 +114,30 @@ def get_anomaly_lines( _vocab , _input , _output , _probs , _device ):
             print( ",".join( l_elems ) )
 
     return b_anomalies
+
+def csv_parse_by_time( _filename, _start_time, _end_time ):
+    with open( _filename , 'r') as csv_file:
+        csv_reader = csv.reader( csv_file )
+        p_bar = tqdm( desc = "Skipping" , total = _start_time )
+        last_time = "0"
+        for line in csv_reader:
+            if int(line[0]) >= _start_time:
+                break
+            if last_time != line[0]:
+                last_time = line[0]
+                p_bar.update( 1 )
+        p_bar.close()
+
+        #output first line
+        yield line
+
+        p_bar = tqdm( desc = "Processing" , total=_end_time - _start_time )
+        last_line = "0"
+        for line_no , line in enumerate( csv_reader ):
+            if int(line[0]) >= _end_time:
+                break
+            if line[0] != last_line:
+                last_line = line[0]
+                p_bar.update( 1 )
+            yield line
+        p_bar.close()

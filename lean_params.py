@@ -1,17 +1,10 @@
 
-gen_params_1M = {
-    "ws_label": "1M",
-    "ws_size": 1000000,
-    "vocab_cutoff": 10
-}
-
-gen_params_full = {
-    "ws_label": "full",
-    "ws_size": 418236956,
+gen_params_day7 = {
+    "ws_label": "day7",
+    "ws_start_time": 7*86400,
+    "ws_end_time": 8*86400,
     "vocab_cutoff": 40
 }
-
-gen_params = gen_params_1M
 
 net_params = {
     "embed_size": 128,
