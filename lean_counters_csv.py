@@ -1,7 +1,5 @@
 from collections import Counter
-from tqdm import tqdm
 import pickle
-import csv
 import lean_params as lp
 import lean_utils as lu
 
@@ -23,13 +21,6 @@ def process_line( line ):
         else:
             v_counter[col] += 1
 
-# p_bar = tqdm( lu.csv_parse_by_time( input_filename , gen_params['ws_start_time'] , gen_params['ws_end_time'] ) , total = gen_params['ws_size'] )
-# for line_no, line in enumerate( p_bar ):
-#     if line_no == gen_params['ws_size']:
-#         break
-#     process_line( line )
-#     if line_no % 100000 == 0:
-#         p_bar.set_postfix( v_size = len(v_counter) , refresh=False )
 for line_no, line in enumerate( lu.csv_parse_by_time( input_filename , gen_params['ws_start_time'] , gen_params['ws_end_time'] ) ):
     process_line( line )
 
