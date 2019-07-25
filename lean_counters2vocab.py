@@ -9,7 +9,7 @@ with open( counters_filename , 'rb' ) as h:
     counters = pickle.load( h )
     print( f'Loaded counters len={len(counters)}' )
 
-lean_vocab = vocab.Vocab( counters, min_freq=10 , specials=['<unk>', '<pad>']  )
+lean_vocab = vocab.Vocab( counters, min_freq=gen_params['vocab_cutoff'] , specials=['<unk>', '<pad>']  )
 
 with open( vocab_filename , 'wb' ) as h:
     pickle.dump( lean_vocab , h )

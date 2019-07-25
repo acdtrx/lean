@@ -1,4 +1,3 @@
-import pandas as pd
 import torchtext.vocab as vocab
 import torch
 import csv

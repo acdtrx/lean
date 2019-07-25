@@ -30,6 +30,12 @@ with open( input_filename , 'r') as f:
             p_bar.set_postfix( v_size = len(v_counter) , refresh=False )
 
 v_counter['<eos>'] = gen_params['ws_size']
+unk_count = 0
+for val in v_counter.values():
+    if val < gen_params['vocab_cutoff']:
+        unk_count += val
+
+v_counter['<unk>'] = unk_count
 
 print( f'Vocabulary size: {len(v_counter)}' )
 print( f'Most common: {v_counter.most_common(5)}' )
