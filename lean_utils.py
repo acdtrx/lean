@@ -1,11 +1,5 @@
-from torch.utils.tensorboard import SummaryWriter
 import pickle
-from tabulate import tabulate
 import torch
-import random
-from termcolor import colored as clr
-import csv
-from tqdm import tqdm
 
 def get_device( force_cpu = False):
     if not force_cpu and torch.cuda.is_available():
@@ -22,6 +16,7 @@ def create_training_label():
     return current_time
 
 def output_hparams( _training_label, _net_params, _trainer_params, _gen_params, _vocab ):
+    from tabulate import tabulate
 
     output = [
         ['Working Set label', _gen_params['ws_label']],
@@ -43,6 +38,7 @@ def output_hparams( _training_label, _net_params, _trainer_params, _gen_params, 
 
 def setup_tensorboard( _training_label ):
     import os
+    from torch.utils.tensorboard import SummaryWriter
 
     log_dir = os.path.join( 'runs', _training_label )
     tb_writer_train = SummaryWriter( f'{log_dir}-train' )
@@ -82,6 +78,8 @@ def load_network(network, training_label, epoch_no):
     return network.load_state_dict( torch.load( f'./output/model_{training_label}_ep_{epoch_no}.pt' ) )
 
 def get_anomaly_lines( _vocab , _input , _output , _probs , _device ):
+    from termcolor import colored as clr
+
     def get_item( _i , _o , _p ):
         if _i != _o:
             el = f'{_vocab.itos[_i]}/{_vocab.itos[_o]}'
@@ -116,6 +114,9 @@ def get_anomaly_lines( _vocab , _input , _output , _probs , _device ):
     return b_anomalies
 
 def csv_parse_by_time( _filename, _start_time, _end_time ):
+    import csv
+    from tqdm import tqdm
+
     with open( _filename , 'r') as csv_file:
         csv_reader = csv.reader( csv_file )
         p_bar = tqdm( desc = "Skipping" , total = _start_time )
