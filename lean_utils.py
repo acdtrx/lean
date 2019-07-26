@@ -52,7 +52,7 @@ def output_hparams( _sw , _training_label, _net_params, _trainer_params, _gen_pa
             'Vocabulary <unk> weight': _vocab.freqs['<unk>'],
             'Vocabulary <eos> weight': _vocab.freqs['<eos>']
         }
-    }))
+    }) , _trainer_params['starting_epoch'] )
 
 def setup_tensorboard( _training_label ):
     import os

@@ -26,6 +26,7 @@ train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename 
 
 #setup tensorboard & friends
 training_label = lu.create_training_label('tb-test')
+training_label = 'baseline-Jul26_10-06-31'
 print( f'Training label: {training_label}' )
 tb_train_writer, tb_test_writer = lu.setup_tensorboard( training_label )
 lu.output_hparams( tb_train_writer, training_label, lp.net_params, lp.trainer_params, gen_params, lean_vocab )
@@ -55,5 +56,8 @@ def run_epoch( epoch_no , tests = None , save_network = False):
     if save_network:
         lu.save_network( network, training_label , epoch_no )
 
-for epoch_no in range(0, lp.trainer_params['epochs'] ):
+if lp.trainer_params['starting_epoch'] != 0:
+    lu.load_network( network , training_label , lp.trainer_params['starting_epoch'] - 1 )
+
+for epoch_no in range(lp.trainer_params['starting_epoch'], lp.trainer_params['starting_epoch']+lp.trainer_params['epochs'] ):
     run_epoch( epoch_no , save_network=True )
