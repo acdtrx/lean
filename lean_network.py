@@ -44,4 +44,3 @@ class LeanModel(nn.Module):
 
     def get_probs( self , y ):
         return self.sm( y )
-

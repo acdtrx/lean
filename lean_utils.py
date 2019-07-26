@@ -20,7 +20,6 @@ def output_hparams( _training_label, _net_params, _trainer_params, _gen_params, 
 
     output = [
         ['Working Set label', _gen_params['ws_label']],
-        ['Working Set size', _gen_params['ws_size']],
         ['Embed size', _net_params['embed_size']],
         ['Hidden size', _net_params['hidden_size']],
         ['Bidirectional LSTM', _net_params['bidirectional']],

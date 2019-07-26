@@ -31,5 +31,5 @@ trainer_params = {
     "batch_size": 64,
     "lr": 0.001,
     "epochs": 4,
-    "compute_acc_every": 100
+    "compute_acc_every": 1000
 }
