@@ -1,5 +1,6 @@
 import pickle
 import torch
+from torch.utils.data import TensorDataset, DataLoader
 
 def get_device( force_cpu = False):
     if not force_cpu and torch.cuda.is_available():
@@ -9,31 +10,46 @@ def get_device( force_cpu = False):
 
     return device
 
-def create_training_label():
+def create_training_label( _label=None ):
     from datetime import datetime
-    current_time = datetime.now().strftime('%b%d_%H-%M-%S')
+    label = datetime.now().strftime('%b%d_%H-%M-%S')
 
-    return current_time
+    if _label:
+        label = f'{_label}-{label}'
 
-def output_hparams( _training_label, _net_params, _trainer_params, _gen_params, _vocab ):
-    from tabulate import tabulate
+    return label
 
-    output = [
-        ['Working Set label', _gen_params['ws_label']],
+def output_hparams( _sw , _training_label, _net_params, _trainer_params, _gen_params, _vocab ):
+    def md_table( _params , _titles = None ):
+        if not _titles:
+            _titles = ['Name' , 'Value']
+
+        out_table = "|".join( _titles ) + '\n'
+        out_table += ":---|---:" + '\n'
+
+        for line in _params:
+            out_table += ( line[0] + '|' + str( line[1] ) ) + '\n'
+
+        return out_table
+
+    _sw.add_text( 'HyperParameters/Network' , md_table( [
         ['Embed size', _net_params['embed_size']],
         ['Hidden size', _net_params['hidden_size']],
         ['Bidirectional LSTM', _net_params['bidirectional']],
-        ['Vocab weights alpha', _net_params['weights_alpha']],
-        ['Vocabulary <unk> weight', _vocab.freqs['<unk>']],
-        ['Vocabulary <eos> weight', _vocab.freqs['<eos>']],
+        ['Vocab weights alpha', _net_params['weights_alpha']]
+    ] ) )
+
+    _sw.add_text( 'HyperParameters/Trainer' , md_table( [
         ['Batch size', _trainer_params['batch_size']],
         ['Learning rate', _trainer_params['lr']],
         ['Computer accuracy every', _trainer_params['compute_acc_every']]
-    ]
+    ] ) )
 
-    with open( f'./output/{_training_label}.txt' , 'w' ) as h:
-        h.write( tabulate( output , ('Parameter' , 'Value') ) )
-
+    _sw.add_text( 'HyperParameters/Others' , md_table( [
+        ['Working Set label', _gen_params['ws_label']],
+        ['Vocabulary <unk> weight', _vocab.freqs['<unk>']],
+        ['Vocabulary <eos> weight', _vocab.freqs['<eos>']]
+    ] ) )
 
 def setup_tensorboard( _training_label ):
     import os

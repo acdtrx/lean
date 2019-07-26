@@ -25,10 +25,11 @@ lean_vocab = lu.load_vocab( vocab_filename )
 train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename , test_filename )
 
 #setup tensorboard & friends
-training_label = lu.create_training_label()
+training_label = lu.create_training_label('netrunner-test')
 print( f'Training label: {training_label}' )
 tb_train_writer, tb_test_writer = lu.setup_tensorboard( training_label )
-lu.output_hparams( training_label, lp.net_params, lp.trainer_params, gen_params, lean_vocab )
+lu.output_hparams( tb_train_writer, training_label, lp.net_params, lp.trainer_params, gen_params, lean_vocab )
+
 
 # output vocabulary freqs
 def vocab_summary( _vocab , _sw ):
@@ -60,7 +61,7 @@ vocab_summary( lean_vocab , tb_train_writer )
 
 network = LeanModel( lean_vocab , lp.net_params ).to( device )
 
-trainer = Trainer( device , network , train_data , test_data , lp.trainer_params )
+trainer = Trainer( network , train_data , test_data , lp.trainer_params )
 
 def run_epoch( epoch_no , tests = None , save_network = False):
     epoch_loss, epoch_acc, test_losses = trainer.train_epoch( epoch_no , tests )

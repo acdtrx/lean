@@ -3,20 +3,18 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.optim as optim
 
+import lean_utils as lu
 from tqdm import tqdm
+from lean_network import LeanNetRunner
 
 # trainer class
 class Trainer():
-    def __init__(self, device, network, train_data, test_data, trainer_params):
+    def __init__(self, network, train_data, test_data, trainer_params):
         self.network = network
         self.trainer_params = trainer_params
-        self.device = device
 
-        train_ds = TensorDataset( train_data )
-        test_ds = TensorDataset( test_data )
-
-        self.train_dl = DataLoader( train_ds , trainer_params['batch_size'] , False )
-        self.test_dl = DataLoader( test_ds , trainer_params['batch_size'] , False )
+        self.train_data = train_data
+        self.test_data = test_data
 
         self.optimizer = optim.Adam( self.network.parameters() , lr=self.trainer_params['lr'] )
         self.scheduler = lr_scheduler.ReduceLROnPlateau( self.optimizer , mode='min' , factor=0.1 , threshold=0.1 , patience=1 , verbose=True )
@@ -31,24 +29,22 @@ class Trainer():
         if tests:
             test_every = len( self.train_dl ) // tests
 
-        p_bar = tqdm( self.train_dl , desc=f'Trn {epoch_no}' )
-        for batch_no, (train_data,) in enumerate(p_bar):
+        p_bar = tqdm(
+            LeanNetRunner( self.network , self.train_data , self.trainer_params['batch_size'] ),
+            desc=f'Trn {epoch_no}'
+        )
+        for batch_no, (batch_data, batch_out) in enumerate( p_bar ):
             batch_no += 1
-            # prepare ground truth
-            train_data = train_data.to(self.device)
-
-            hs , _ = self.network( train_data[:,:-1] )
-            out = self.network.get_logits( hs )
 
             self.optimizer.zero_grad()
-            batch_loss = self.network.get_loss( out.permute(0,2,1) , train_data[:,1:] )
+            batch_loss = self.network.get_loss( batch_out.permute(0,2,1) , batch_data[:,1:] )
             batch_loss.backward()
             self.optimizer.step()
 
             epoch_loss += batch_loss.detach().item()
 
             if batch_no % self.trainer_params['compute_acc_every'] == 0:
-                batch_probs = self.network.get_probs( out.detach() / 1.0 ).gather( 2 , train_data[:,1:].unsqueeze(2) ).squeeze(2)
+                batch_probs = self.network.get_probs( batch_out.detach() ).gather( 2 , batch_data[:,1:].unsqueeze(2) ).squeeze(2)
                 batch_accuracy = batch_probs.prod( dim=1 ).mean()
                 epoch_accuracy += batch_accuracy
                 epoch_accuracy_p = epoch_accuracy*100/(batch_no / self.trainer_params['compute_acc_every'] )
@@ -75,20 +71,18 @@ class Trainer():
         epoch_accuracy_p = 0
 
         with torch.no_grad():
-            p_bar = tqdm( self.test_dl , desc=f'Tst {epoch_no}' )
-            for batch_no, (test_data,) in enumerate(p_bar):
+            p_bar = tqdm(
+                LeanNetRunner( self.network , self.test_data , self.trainer_params['batch_size'] ),
+                desc=f'Test {epoch_no}'
+            )
+            for batch_no, (batch_data, batch_out) in enumerate(p_bar):
                 batch_no += 1
-                # prepare ground truth
-                test_data = test_data.to(self.device)
 
-                hs , _ = self.network( test_data[:,:-1] )
-                out = self.network.get_logits( hs )
-
-                batch_loss = self.network.get_loss( out.permute(0,2,1) , test_data[:,1:] )
+                batch_loss = self.network.get_loss( batch_out.permute(0,2,1) , batch_data[:,1:] )
                 epoch_loss += batch_loss.detach().item()
 
                 if batch_no % self.trainer_params['compute_acc_every'] == 0:
-                    batch_probs = self.network.get_probs( out.detach() / 1.0 ).gather( 2 , test_data[:,1:].unsqueeze(2) ).squeeze(2)
+                    batch_probs = self.network.get_probs( batch_out.detach() ).gather( 2 , batch_data[:,1:].unsqueeze(2) ).squeeze(2)
                     batch_accuracy = batch_probs.prod( dim=1 ).mean()
                     epoch_accuracy += batch_accuracy
                     epoch_accuracy_p = epoch_accuracy*100/(batch_no / self.trainer_params['compute_acc_every'] )
