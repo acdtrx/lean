@@ -44,6 +44,7 @@ def output_hparams( _sw , _training_label, _net_params, _trainer_params, _gen_pa
         "Trainer": {
             'Batch size': _trainer_params['batch_size'],
             'Learning rate': _trainer_params['lr'],
+            'Epochs': _trainer_params['epochs'],
             'Computer accuracy every': _trainer_params['compute_acc_every']
         },
         "Others": {
