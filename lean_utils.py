@@ -20,36 +20,38 @@ def create_training_label( _label=None ):
     return label
 
 def output_hparams( _sw , _training_label, _net_params, _trainer_params, _gen_params, _vocab ):
-    def md_table( _params , _titles = None ):
-        if not _titles:
-            _titles = ['Name' , 'Value']
+    def md_table( _params ):
+        _titles = ['Category' , 'Parameter' , 'Value']
 
-        out_table = "|".join( _titles ) + '\n'
-        out_table += ":---|---:" + '\n'
+        out_table = []
+        out_table.append( "Category|Parameter|Value" )
+        out_table.append( ":---|:---|---:" )
 
-        for line in _params:
-            out_table += ( line[0] + '|' + str( line[1] ) ) + '\n'
+        for categ, params in _params.items():
+            for param_name, param_value in params.items():
+                out_table.append( f'{categ}|{param_name}|{param_value}' )
+                categ = ''
 
-        return out_table
+        return "\n".join( out_table )
 
-    _sw.add_text( 'HyperParameters/Network' , md_table( [
-        ['Embed size', _net_params['embed_size']],
-        ['Hidden size', _net_params['hidden_size']],
-        ['Bidirectional LSTM', _net_params['bidirectional']],
-        ['Vocab weights alpha', _net_params['weights_alpha']]
-    ] ) )
-
-    _sw.add_text( 'HyperParameters/Trainer' , md_table( [
-        ['Batch size', _trainer_params['batch_size']],
-        ['Learning rate', _trainer_params['lr']],
-        ['Computer accuracy every', _trainer_params['compute_acc_every']]
-    ] ) )
-
-    _sw.add_text( 'HyperParameters/Others' , md_table( [
-        ['Working Set label', _gen_params['ws_label']],
-        ['Vocabulary <unk> weight', _vocab.freqs['<unk>']],
-        ['Vocabulary <eos> weight', _vocab.freqs['<eos>']]
-    ] ) )
+    _sw.add_text( 'HyperParameters/All' , md_table( {
+        "Network": {
+            'Embed size': _net_params['embed_size'],
+            'Hidden size': _net_params['hidden_size'],
+            'Bidirectional LSTM': _net_params['bidirectional'],
+            'Vocab weights alpha': _net_params['weights_alpha']
+        },
+        "Trainer": {
+            'Batch size': _trainer_params['batch_size'],
+            'Learning rate': _trainer_params['lr'],
+            'Computer accuracy every': _trainer_params['compute_acc_every']
+        },
+        "Others": {
+            'Working Set label': _gen_params['ws_label'],
+            'Vocabulary <unk> weight': _vocab.freqs['<unk>'],
+            'Vocabulary <eos> weight': _vocab.freqs['<eos>']
+        }
+    }))
 
 def setup_tensorboard( _training_label ):
     import os
@@ -68,6 +70,32 @@ def load_vocab( filename ):
     print(f'Loaded {len(lean_vocab.stoi)} vocab entries.' )
 
     return lean_vocab
+
+def vocab_summary( _vocab , _sw ):
+    import matplotlib.pyplot as plt
+    x, y = zip( *_vocab.freqs.most_common( 10 ) )
+    plt.figure( figsize=(16,4) )
+    plt.bar( x , y )
+    plt.xticks( rotation=315 , rotation_mode="anchor" )
+    _sw.add_figure( "Vocab/Most_Common_10" , plt.gcf() )
+
+    x, y = zip( *_vocab.freqs.most_common( 50 )[10:] )
+    plt.figure( figsize=(16,4) )
+    plt.bar( x , y )
+    plt.xticks( rotation=315 , rotation_mode="anchor" )
+    _sw.add_figure( "Vocab/Most_Common_Next40" , plt.gcf() )
+
+    lf = _vocab.freqs.most_common()
+    lfa = []
+    for k,v in lf:
+        if v >= 10:
+            lfa.append( (k,v) )
+
+    x, y = zip( *lfa[-51:] )
+    plt.figure( figsize=(16,4) )
+    plt.bar( x , y )
+    plt.xticks( rotation=315 )
+    _sw.add_figure( "Vocab/Least_Common" , plt.gcf() )
 
 def load_data( padding, train_filename, test_filename=None, train_split=0.8 , cut=1.0 ):
     def load_and_prepare_data( filename , padding , cut=1.0 ):

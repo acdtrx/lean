@@ -25,39 +25,14 @@ lean_vocab = lu.load_vocab( vocab_filename )
 train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename , test_filename )
 
 #setup tensorboard & friends
-training_label = lu.create_training_label('netrunner-test')
+training_label = lu.create_training_label('tb-test')
 print( f'Training label: {training_label}' )
 tb_train_writer, tb_test_writer = lu.setup_tensorboard( training_label )
 lu.output_hparams( tb_train_writer, training_label, lp.net_params, lp.trainer_params, gen_params, lean_vocab )
 
 
 # output vocabulary freqs
-def vocab_summary( _vocab , _sw ):
-    x, y = zip( *_vocab.freqs.most_common( 10 ) )
-    plt.figure( figsize=(16,4) )
-    plt.bar( x , y )
-    plt.xticks( rotation=315 , rotation_mode="anchor" )
-    _sw.add_figure( "Vocab/Most_Common_10" , plt.gcf() )
-
-    x, y = zip( *_vocab.freqs.most_common( 50 )[10:] )
-    plt.figure( figsize=(16,4) )
-    plt.bar( x , y )
-    plt.xticks( rotation=315 , rotation_mode="anchor" )
-    _sw.add_figure( "Vocab/Most_Common_Next40" , plt.gcf() )
-
-    lf = _vocab.freqs.most_common()
-    lfa = []
-    for k,v in lf:
-        if v >= 10:
-            lfa.append( (k,v) )
-
-    x, y = zip( *lfa[-51:] )
-    plt.figure( figsize=(16,4) )
-    plt.bar( x , y )
-    plt.xticks( rotation=315 )
-    _sw.add_figure( "Vocab/Least_Common" , plt.gcf() )
-
-vocab_summary( lean_vocab , tb_train_writer )
+# vocab_summary( lean_vocab , tb_train_writer )
 
 network = LeanModel( lean_vocab , lp.net_params ).to( device )
 
