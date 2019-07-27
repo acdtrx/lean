@@ -7,19 +7,19 @@ from lean_network import LeanModel
 
 from tqdm import tqdm
 
-from lean_params import net_params, gen_params
+import lean_params as lp
 
 training_label = 'baseline-Jul26_10-06-31'
-test_filename = f'./cache/tensors_train_{gen_params["ws_label"]}.pt'
+test_filename = f'./cache/tensors_train_{lp.gen_params_test["ws_label"]}.pt'
 
 # setup device (CPU/GPU)
 device = lu.get_device()
 
-vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
+vocab_filename = f'./cache/vocab_users_{lp.gen_params_train["ws_label"]}.pickle'
 lean_vocab = lu.load_vocab( vocab_filename )
 
-network = LeanModel( lean_vocab , net_params )
-lu.load_network( network , training_label , 3 )
+network = LeanModel( lean_vocab , lp.net_params )
+lu.load_network( network , training_label , 9 )
 network = network.to( device )
 
 _ , test_data = lu.load_data( lean_vocab.stoi['<eos>'] , test_filename , train_split=0.0 )
@@ -43,5 +43,4 @@ def find_anomalies( data ):
 
 
 anomaly_lines = find_anomalies( test_data )
-
 print( f'Found {anomaly_lines} anomalies.' )
