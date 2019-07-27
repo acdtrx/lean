@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from lean_params import net_params, gen_params
 
-training_label = 'Jul24_14-34-58'
+training_label = 'baseline-Jul26_10-06-31'
 test_filename = f'./cache/tensors_train_{gen_params["ws_label"]}.pt'
 
 # setup device (CPU/GPU)

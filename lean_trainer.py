@@ -17,10 +17,14 @@ class Trainer():
         self.test_data = test_data
 
         self.optimizer = optim.Adam( self.network.parameters() , lr=self.trainer_params['lr'] )
-        self.scheduler = lr_scheduler.ReduceLROnPlateau( self.optimizer , mode='min' , factor=0.1 , threshold=0.1 , patience=1 , verbose=True )
-        # self.scheduler = lr_scheduler.StepLR( self.optimizer , 1 , 0.1 )
+        # self.scheduler = lr_scheduler.ReduceLROnPlateau( self.optimizer , mode='min' , factor=0.1 , threshold=0.1 , patience=1 , verbose=True )
+        self.scheduler = lr_scheduler.StepLR( self.optimizer , 3 , 0.1 )
 
     def train_epoch(self, epoch_no, tests = None):
+        def get_lr(optimizer):
+            for param_group in optimizer.param_groups:
+                return param_group['lr']
+
         epoch_loss = 0.0
         epoch_accuracy = 0.0
         epoch_accuracy_p = 0
@@ -60,10 +64,11 @@ class Trainer():
             #     test_loss, _ = self.test_epoch( epoch_no )
             #     test_losses.append( test_loss )
         
-        self.scheduler.step( epoch_loss )
-        # self.scheduler.step()
+        lr = get_lr( self.optimizer )
+        # self.scheduler.step( epoch_loss )
+        self.scheduler.step()
 
-        return epoch_loss / batch_no , epoch_accuracy_p, test_losses
+        return epoch_loss / batch_no , epoch_accuracy_p, lr, test_losses
 
     def test_epoch(self, epoch_no):
         epoch_loss = 0.0
