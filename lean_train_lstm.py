@@ -25,8 +25,8 @@ lean_vocab = lu.load_vocab( vocab_filename )
 train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename , test_filename )
 
 #setup tensorboard & friends
-training_label = lu.create_training_label('tb-test')
-training_label = 'baseline-Jul26_10-06-31'
+training_label = lu.create_training_label('baseline')
+# training_label = 'baseline-Jul26_10-06-31'
 print( f'Training label: {training_label}' )
 tb_train_writer, tb_test_writer = lu.setup_tensorboard( training_label )
 lu.output_hparams( tb_train_writer, training_label, lp.net_params, lp.trainer_params, gen_params, lean_vocab )

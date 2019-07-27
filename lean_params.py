@@ -29,8 +29,8 @@ net_params = {
 
 trainer_params = {
     "batch_size": 64,
-    "lr": 0.0001,
+    "lr": 0.001,
     "epochs": 4,
-    "starting_epoch": 8,
+    "starting_epoch": 0,
     "compute_acc_every": 1000
 }

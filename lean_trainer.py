@@ -75,7 +75,7 @@ class Trainer():
                 LeanNetRunner( self.network , self.test_data , self.trainer_params['batch_size'] ),
                 desc=f'Test {epoch_no}'
             )
-            for batch_no, (batch_data, batch_out) in enumerate(p_bar):
+            for batch_no, (batch_data, batch_out) in enumerate( p_bar ):
                 batch_no += 1
 
                 batch_loss = self.network.get_loss( batch_out.permute(0,2,1) , batch_data[:,1:] )
