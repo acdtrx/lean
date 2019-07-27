@@ -8,6 +8,7 @@ def get_device( force_cpu = False):
     else:
         device = torch.device('cpu')
 
+    print( f'Device: {device}')
     return device
 
 def create_training_label( _label=None ):
