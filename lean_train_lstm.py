@@ -14,7 +14,7 @@ gen_params = lp.gen_params_all['day7']
 device = lu.get_device()
 
 # input filenames
-vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
+vocab_filename = f'./cache/vocab_users_{lp.gen_params_all[lp.vocab_params_label]["ws_label"]}.pickle'
 train_filename = f'./cache/tensors_{gen_params["ws_label"]}.pt'
 test_filename = f'./cache/tensors_{lp.gen_params_all["day8"]["ws_label"]}.pt'
 

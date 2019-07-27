@@ -8,10 +8,10 @@ from tqdm import tqdm
 import lean_utils as lu
 import lean_params as lp
 
-gen_params = lp.gen_params_all['day8']
+gen_params = lp.gen_params_all['redteam7']
 
-input_filename = './data/auth_users.txt'
-vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
+input_filename = gen_params['csv_filename']
+vocab_filename = f'./cache/vocab_users_{lp.gen_params_all[lp.vocab_params_label]["ws_label"]}.pickle'
 
 tensors_filename = f'./cache/tensors_{gen_params["ws_label"]}.pt'
 
@@ -54,4 +54,4 @@ tensors_arr.append( t[:tbi] )
 out_t = torch.cat( tensors_arr , dim=0 )
 
 torch.save( out_t , tensors_filename )
-print( f'Saved {tensors_filename}' )
+print( f'Saved {tensors_filename} Size {out_t.size(0)}' )
