@@ -12,21 +12,11 @@ probs_filename = f'./cache/probs_{lp.gen_params_test["ws_label"]}.pt'
 def load_probs( filename ):
     return torch.load( filename )
 
-def plot_elems_under_thr( probs ):
+def plot_elems_under_thr( probs , thr = 1.0 ):
     x , y = [] , []
     for i in trange( 101 ):
-        x.append( i )
-        y.append( ( probs < i ).sum().item() * 100 / probs.size(0) )
-
-    plt.figure()
-    plt.plot( x , y )
-    plt.show()
-    plt.close()
-
-    x , y = [] , []
-    for i in trange( 101 ):
-        x.append( i / 100 )
-        y.append( ( probs < (i / 100) ).sum().item() * 100 / probs.size(0) )
+        x.append( i * thr / 100 )
+        y.append( ( probs < (i * thr / 100) ).sum().item() * 100 / probs.size(0) )
 
     plt.figure()
     plt.plot( x , y )
@@ -34,4 +24,7 @@ def plot_elems_under_thr( probs ):
     plt.close()
 
 probs = torch.load( probs_filename )
-plot_elems_under_thr( probs )
+# plot_elems_under_thr( probs , 1.0 )
+# plot_elems_under_thr( probs , 0.1 )
+plot_elems_under_thr( probs , 0.01 )
+
