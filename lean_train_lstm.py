@@ -11,10 +11,13 @@ import lean_params as lp
 # setup device (CPU/GPU)
 device = lu.get_device()
 
+gen_params_train = lp.gen_params_all['day0-7']
+gen_params_test = lp.gen_params_all['day8']
+
 # input filenames
-vocab_filename = f'./cache/vocab_users_{lp.gen_params_train["ws_label"]}.pickle'
-train_filename = f'./cache/tensors_{lp.gen_params_train["ws_label"]}.pt'
-test_filename = f'./cache/tensors_{lp.gen_params_test["ws_label"]}.pt'
+vocab_filename = f'./cache/vocab_users_{gen_params_train["ws_label"]}.pickle'
+train_filename = f'./cache/tensors_{gen_params_train["ws_label"]}.pt'
+test_filename = f'./cache/tensors_{gen_params_test["ws_label"]}.pt'
 
 # load vocabulary
 lean_vocab = lu.load_vocab( vocab_filename )
@@ -23,11 +26,11 @@ lean_vocab = lu.load_vocab( vocab_filename )
 train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename , test_filename )
 
 #setup tensorboard & friends
-training_label = lu.create_training_label('baseline')
+training_label = lu.create_training_label('baseline0-7')
 # training_label = 'baseline-Jul26_10-06-31'
 print( f'Training label: {training_label}' )
 tb_train_writer, tb_test_writer = lu.setup_tensorboard( training_label )
-lu.output_hparams( tb_train_writer, training_label, lp.net_params, lp.trainer_params, lp.gen_params_train, lean_vocab )
+lu.output_hparams( tb_train_writer, training_label, lp.net_params, lp.trainer_params, gen_params_train, gen_params_test, lean_vocab )
 
 
 # output vocabulary freqs

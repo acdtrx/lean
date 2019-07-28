@@ -20,7 +20,7 @@ def create_training_label( _label=None ):
 
     return label
 
-def output_hparams( _sw , _training_label, _net_params, _trainer_params, _gen_params, _vocab ):
+def output_hparams( _sw , _training_label, _net_params, _trainer_params, _gen_params_train, _gen_params_test, _vocab ):
     def md_table( _params ):
         _titles = ['Category' , 'Parameter' , 'Value']
 
@@ -49,7 +49,8 @@ def output_hparams( _sw , _training_label, _net_params, _trainer_params, _gen_pa
             'Computer accuracy every': _trainer_params['compute_acc_every']
         },
         "Others": {
-            'Working Set label': _gen_params['ws_label'],
+            'Train Working Set label': _gen_params_train['ws_label'],
+            'Test Working Set label': _gen_params_test['ws_label'],
             'Vocabulary <unk> weight': _vocab.freqs['<unk>'],
             'Vocabulary <eos> weight': _vocab.freqs['<eos>']
         }
