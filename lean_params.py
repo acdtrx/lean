@@ -1,5 +1,12 @@
 
 gen_params_all = {
+    "day0-7": {
+        "ws_label": "day0-7",
+        "ws_start_time": 0,
+        "ws_end_time": 8*86400,
+        "vocab_cutoff": 40,
+        "csv_filename": './data/auth_users.txt'
+    },
     "day7": {
         "ws_label": "day7",
         "ws_start_time": 7*86400,

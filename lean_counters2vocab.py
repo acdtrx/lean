@@ -2,7 +2,7 @@ import pickle
 import torchtext.vocab as vocab
 import lean_params as lp
 
-gen_params = lp.gen_params_all['day7']
+gen_params = lp.gen_params_all['day0-7']
 
 counters_filename = f'./cache/counters_users_{gen_params["ws_label"]}.pickle'
 vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
