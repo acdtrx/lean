@@ -8,15 +8,18 @@ import lean_utils as lu
 from lean_network import LeanModel, LeanNetRunner
 import lean_params as lp
 
+gen_params_train = lp.gen_params_all['day7']
+gen_params_test = lp.gen_params_all['day8']
+
 training_label = 'baseline-Jul27_16-18-30'
 training_epoch = 8
-test_filename = f'./cache/tensors_{lp.gen_params_test["ws_label"]}.pt'
-probs_filename = f'./cache/probs_{lp.gen_params_test["ws_label"]}.pt'
+test_filename = f'./cache/tensors_{gen_params_test["ws_label"]}.pt'
+probs_filename = f'./cache/probs_{gen_params_test["ws_label"]}.pt'
 
 # setup device (CPU/GPU)
 device = lu.get_device()
 
-vocab_filename = f'./cache/vocab_users_{lp.gen_params_train["ws_label"]}.pickle'
+vocab_filename = f'./cache/vocab_users_{gen_params_train["ws_label"]}.pickle'
 lean_vocab = lu.load_vocab( vocab_filename )
 
 network = LeanModel( lean_vocab , lp.net_params )

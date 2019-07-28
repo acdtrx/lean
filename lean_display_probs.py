@@ -7,7 +7,9 @@ import lean_utils as lu
 from lean_network import LeanModel, LeanNetRunner
 import lean_params as lp
 
-probs_filename = f'./cache/probs_{lp.gen_params_test["ws_label"]}.pt'
+gen_params_test = lp.gen_params_all['day8']
+
+probs_filename = f'./cache/probs_{gen_params_test["ws_label"]}.pt'
 
 def load_probs( filename ):
     return torch.load( filename )

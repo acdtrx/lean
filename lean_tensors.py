@@ -11,7 +11,7 @@ import lean_params as lp
 gen_params = lp.gen_params_all['day0-7']
 
 input_filename = gen_params['csv_filename']
-vocab_filename = f'./cache/vocab_users_{lp.gen_params_all["day0-7"]["ws_label"]}.pickle'
+vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
 
 tensors_filename = f'./cache/tensors_{gen_params["ws_label"]}.pt'
 

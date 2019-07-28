@@ -44,9 +44,6 @@ gen_params_all = {
     }
 }
 
-gen_params_train = gen_params_all['day7']
-gen_params_test = gen_params_all['day8']
-
 net_params = {
     "embed_size": 128,
     "hidden_size": 512,
