@@ -5,3 +5,4 @@ cache/
 data/
 __pycache__/
 runs/
+lean_pg.py
