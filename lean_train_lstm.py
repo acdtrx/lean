@@ -11,13 +11,19 @@ import lean_params as lp
 # setup device (CPU/GPU)
 device = lu.get_device()
 
-gen_params_train = lp.gen_params_all['day0-7']
-gen_params_test = lp.gen_params_all['day8']
+cli_args = lu.get_cli_args()
+
+gen_params_train = lp.gen_params_all[cli_args.train]
+gen_params_test = lp.gen_params_all[cli_args.test]
 
 # input filenames
-vocab_filename = f'./cache/vocab_users_{gen_params_train["ws_label"]}.pickle'
-train_filename = f'./cache/tensors_{gen_params_train["ws_label"]}.pt'
-test_filename = f'./cache/tensors_{gen_params_test["ws_label"]}.pt'
+vocab_filename = gen_params_train['vocab_filename']
+train_filename = gen_params_train['tensors_filename']
+test_filename = gen_params_test['tensors_filename']
+
+print( f'Vocab tensors: {vocab_filename}' )
+print( f'Training tensors: {train_filename}' )
+print( f'Testing tensors: {test_filename}' )
 
 # load vocabulary
 lean_vocab = lu.load_vocab( vocab_filename )
@@ -26,15 +32,14 @@ lean_vocab = lu.load_vocab( vocab_filename )
 train_data, test_data = lu.load_data( lean_vocab.stoi['<eos>'] , train_filename , test_filename )
 
 #setup tensorboard & friends
-training_label = lu.create_training_label('baseline0-7')
+training_label = lu.create_training_label('unidir7')
 # training_label = 'baseline-Jul26_10-06-31'
 print( f'Training label: {training_label}' )
 tb_train_writer, tb_test_writer = lu.setup_tensorboard( training_label )
 lu.output_hparams( tb_train_writer, training_label, lp.net_params, lp.trainer_params, gen_params_train, gen_params_test, lean_vocab )
 
-
 # output vocabulary freqs
-# vocab_summary( lean_vocab , tb_train_writer )
+# lu.vocab_summary( lean_vocab , tb_train_writer )
 
 network = LeanModel( lean_vocab , lp.net_params ).to( device )
 
@@ -60,6 +65,7 @@ def run_epoch( epoch_no , tests = None , save_network = False):
 
 if lp.trainer_params['starting_epoch'] != 0:
     lu.load_network( network , training_label , lp.trainer_params['starting_epoch'] - 1 )
+    network.train()
 
 for epoch_no in range(lp.trainer_params['starting_epoch'], lp.trainer_params['starting_epoch']+lp.trainer_params['epochs'] ):
     run_epoch( epoch_no , save_network=True )

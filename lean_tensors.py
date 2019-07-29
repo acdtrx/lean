@@ -8,12 +8,13 @@ from tqdm import tqdm
 import lean_utils as lu
 import lean_params as lp
 
-gen_params = lp.gen_params_all['day0-7']
+label = lu.get_cli_args().label
+
+gen_params = lp.gen_params_all[label]
 
 input_filename = gen_params['csv_filename']
-vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
-
-tensors_filename = f'./cache/tensors_{gen_params["ws_label"]}.pt'
+vocab_filename = gen_params['vocab_filename']
+tensors_filename = gen_params['tensors_filename']
 
 line_size = 10
 

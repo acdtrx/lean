@@ -49,8 +49,8 @@ def output_hparams( _sw , _training_label, _net_params, _trainer_params, _gen_pa
             'Computer accuracy every': _trainer_params['compute_acc_every']
         },
         "Others": {
-            'Train Working Set label': _gen_params_train['ws_label'],
-            'Test Working Set label': _gen_params_test['ws_label'],
+            'Train Working Set': _gen_params_train['tensors_filename'],
+            'Test Working Set label': _gen_params_test['tensors_filename'],
             'Vocabulary <unk> weight': _vocab.freqs['<unk>'],
             'Vocabulary <eos> weight': _vocab.freqs['<eos>']
         }
@@ -100,13 +100,13 @@ def vocab_summary( _vocab , _sw ):
     plt.xticks( rotation=315 )
     _sw.add_figure( "Vocab/Least_Common" , plt.gcf() )
 
-def load_data( padding, train_filename, test_filename=None, train_split=0.8 , cut=1.0 ):
-    def load_and_prepare_data( filename , padding , cut=1.0 ):
-        input_data = torch.load( filename )
-        if cut != 1.0:
-            input_data = input_data[:round(input_data.size(0) * cut)]
-        return torch.cat( [input_data , torch.full( ( input_data.size(0) , 1 ) , padding , dtype=torch.long ) ] , 1 )
+def load_and_prepare_data( filename , padding , cut=1.0 ):
+    input_data = torch.load( filename )
+    if cut != 1.0:
+        input_data = input_data[:round(input_data.size(0) * cut)]
+    return torch.cat( [input_data , torch.full( ( input_data.size(0) , 1 ) , padding , dtype=torch.long ) ] , 1 )
 
+def load_data( padding, train_filename, test_filename=None, train_split=0.8 , cut=1.0 ):
     train_data = load_and_prepare_data( train_filename , padding , cut )
 
     if test_filename != None:
@@ -190,3 +190,18 @@ def csv_parse_by_time( _filename, _start_time, _end_time ):
                 p_bar.update( 1 )
             yield line
         p_bar.close()
+
+def get_cli_args():
+    import argparse
+    import lean_params
+
+    all_labels = list( lean_params.gen_params_all.keys() )
+
+    cli_parser = argparse.ArgumentParser( description="Create tensors file" )
+    cli_parser.add_argument( '--label' , default='day8' , choices=all_labels, help='lean_params label to be used' )
+    cli_parser.add_argument( '--train' , default='day7' , choices=all_labels, help='lean_params label to be used for training' )
+    cli_parser.add_argument( '--test' , default='day8' , choices=all_labels, help='lean_params label to be used for testing' )
+
+    cli_args = cli_parser.parse_args()
+
+    return cli_args

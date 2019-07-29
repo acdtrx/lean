@@ -8,25 +8,27 @@ import lean_utils as lu
 from lean_network import LeanModel, LeanNetRunner
 import lean_params as lp
 
-gen_params_train = lp.gen_params_all['day7']
-gen_params_test = lp.gen_params_all['day8']
+label = lu.get_cli_args().label
 
-training_label = 'baseline-Jul27_16-18-30'
+gen_params = lp.gen_params_all[label]
+
+training_label = 'baseline-Jul26_10-06-31'
 training_epoch = 8
-test_filename = f'./cache/tensors_{gen_params_test["ws_label"]}.pt'
-probs_filename = f'./cache/probs_{gen_params_test["ws_label"]}.pt'
+
+test_filename = gen_params['tensors_filename']
+probs_filename = f'./cache/probs_{label}_{training_label}_{training_epoch}.pt'
 
 # setup device (CPU/GPU)
 device = lu.get_device()
 
-vocab_filename = f'./cache/vocab_users_{gen_params_train["ws_label"]}.pickle'
+vocab_filename = gen_params['vocab_filename']
 lean_vocab = lu.load_vocab( vocab_filename )
 
 network = LeanModel( lean_vocab , lp.net_params )
 lu.load_network( network , training_label , training_epoch )
 network = network.to( device )
 
-test_data = torch.load( test_filename )
+test_data = lu.load_and_prepare_data( test_filename , lean_vocab.stoi['<eos>'] )
 
 def calculate_probs( network , in_data ):
     probs_out = torch.zeros( in_data.size(0) )
