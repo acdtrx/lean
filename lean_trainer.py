@@ -78,7 +78,7 @@ class Trainer():
         with torch.no_grad():
             p_bar = tqdm(
                 LeanNetRunner( self.network , self.test_data , self.trainer_params['batch_size'] ),
-                desc=f'Test {epoch_no}'
+                desc=f'Tst {epoch_no}'
             )
             for batch_no, (batch_data, batch_out) in enumerate( p_bar ):
                 batch_no += 1
