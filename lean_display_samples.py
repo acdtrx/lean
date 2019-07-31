@@ -1,13 +1,16 @@
 from termcolor import colored as clr
 
 import lean_utils as lu
+import lean_params as lp
 
-from lean_params import net_params, trainer_params, gen_params
+label = lu.get_cli_args()
 
-vocab_filename = f'./cache/vocab_users_{gen_params["ws_label"]}.pickle'
-training_label = 'Jul24_09-44-45'
+gen_params_test = lp.gen_params_all[label]
 
-lean_vocab = lu.load_vocab( vocab_filename )
+training_label = 'baseline-Jul27_16-18-30'
+epoch = 4
+
+lean_vocab = lu.load_vocab( gen_params_test['vocab_filename'] )
 
 for epoch_no in range( trainer_params['epochs'] ):
     epoch_samples = lu.load_epoch_samples( epoch_no , training_label )
