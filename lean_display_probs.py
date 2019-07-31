@@ -1,32 +1,63 @@
 import torch
+import numpy as np
 
-from tqdm import tqdm, trange
+from tqdm import trange
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 import lean_utils as lu
-from lean_network import LeanModel, LeanNetRunner
 import lean_params as lp
 
-gen_params_test = lp.gen_params_all['day8']
+label = 'day0-7-8'
 
-probs_filename = f'./cache/probs_{gen_params_test["ws_label"]}.pt'
+gen_params_test = lp.gen_params_all[label]
+gen_params_red8 = lp.gen_params_all['redteam8']
 
-def load_probs( filename ):
-    return torch.load( filename )
+training_label = 'baseline0-7-Jul28_14-36-21'
+training_epoch = 8
 
-def plot_elems_under_thr( probs , thr = 1.0 ):
-    x , y = [] , []
-    for i in trange( 101 ):
-        x.append( i * thr / 100 )
-        y.append( ( probs < (i * thr / 100) ).sum().item() * 100 / probs.size(0) )
+redlabels_filename = f'./cache/redlabels_day8.pt'
+probs_filename = f'./cache/probs_{label}_{training_label}_{training_epoch}.pt'
 
-    plt.figure()
-    plt.plot( x , y )
-    plt.show()
-    plt.close()
+def y_fmt(y, pos):
+    decades = [1e9, 1e6, 1e3, 1e0, 1e-3, 1e-6, 1e-9 ]
+    suffix  = ["G", "M", "k", "" , "m" , "u", "n"  ]
+    if y == 0:
+        return str(0)
+    for i, d in enumerate(decades):
+        if np.abs(y) >=d:
+            val = y/float(d)
+            signf = len(str(val).split(".")[1])
+            if signf == 0:
+                return '{val:d} {suffix}'.format(val=int(val), suffix=suffix[i])
+            else:
+                if signf == 1:
+                    if str(val).split(".")[1] == "0":
+                       return '{val:d} {suffix}'.format(val=int(round(val)), suffix=suffix[i]) 
+                tx = "{"+"val:.{signf}f".format(signf = signf) +"} {suffix}"
+                return tx.format(val=val, suffix=suffix[i])
 
-probs = torch.load( probs_filename )
-# plot_elems_under_thr( probs , 1.0 )
-# plot_elems_under_thr( probs , 0.1 )
-plot_elems_under_thr( probs , 0.01 )
+    return y
+
+
+redlabels = torch.load( redlabels_filename ).data.cpu().numpy()
+probs = torch.load( probs_filename ).data.cpu().numpy()
+anomm_probs = probs[redlabels == 1]
+
+
+plt.hist( probs , facecolor='g' )
+plt.title( 'Overall probabilities distribution' )
+plt.xlabel( 'Probability' )
+plt.ylabel( 'Log lines' )
+plt.gca().yaxis.set_major_formatter( FuncFormatter( y_fmt ) )
+plt.show()
+plt.close()
+
+plt.hist( anomm_probs , facecolor='r' )
+plt.title( 'Redteam probabilities distribution' )
+plt.xlabel( 'Probability' )
+plt.ylabel( 'Log lines' )
+plt.gca().yaxis.set_major_formatter( FuncFormatter( y_fmt ) )
+plt.show()
+plt.close()
 
